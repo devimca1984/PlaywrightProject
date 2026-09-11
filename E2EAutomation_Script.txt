@@ -1,0 +1,69 @@
+const {test,expect} = require('@playwright/test')
+test("My First E2E Automation test",async function({browser}){
+    const context=await browser.newContext()
+    const page=await context.newPage()
+    await page.goto('https://demowebshop.tricentis.com/login')
+    
+    //Login Page
+    const Email= await page.getByLabel('Email').fill("myplaywright@gmail.com")
+    const Password= await page.getByLabel('Password').fill('test@play')
+    const LoginBtn= await page.locator("[class='button-1 login-button']")
+    await expect(page.locator("[class='button-1 login-button']")).toBeVisible()
+    await LoginBtn.click()
+    //Asset Login Successful
+    await expect(page.getByText('myplaywright@gmail.com')).toHaveText('myplaywright@gmail.com')
+    
+    //Home Page
+    await page.getByRole('link', {name : 'Books'}).first().click()
+      
+    //Product Page
+    //shows 5 products details ->  we need 1 product using filter
+    const book= await page.locator('.product-item').filter({hasText :'Health Book'})
+    //book.getByRole()->use to locate that particular product of the add to cart element
+    await book.getByRole('button',{ name:'Add to cart'}).click() // 
+    await page.locator("//span[text()='Shopping cart']").click()
+
+    //Shopping Cart Page
+    const shoppingcartname= await page.locator("[class='product-name']").textContent()
+    await expect(shoppingcartname).toEqual('Health Book')
+   
+    //Estimate Shipping Page
+    await page.getByLabel('Country:').selectOption({value :"41"})
+    await page.getByLabel('Zip / postal code:').fill("600091")
+    await page.locator("[name='estimateshipping']").click()
+   
+    //Checkout Page
+    await page.locator("[id='termsofservice']").check()
+    await page.getByRole('button',{name :'checkout'}).click()
+    await expect(page.locator("[class='page-title'] h1")).toHaveText("Checkout")
+    
+    //Billing Address Page
+    /*await page.getByLabel('Country:').selectOption({value :"41"})
+    await page.getByLabel('Zip / postal code:').fill("600091")
+    await page.getByLabel('City:').fill('Chennai')
+    await page.getByLabel('Address 1:').fill('R.S.Road')
+    await page.getByLabel('Phone number:').fill('7845001984')*/
+    await page.locator("[onclick='Billing.save()']").click()
+   
+    //Shipping Address Page
+    await page.locator("[onclick='Shipping.save()']").click()
+
+    //Shipping Method Page
+    await page.locator("[onclick='ShippingMethod.save()']").click()
+
+    //Payment Method Page
+    await page.locator("[onclick='PaymentMethod.save()']").click()
+
+    //Payment Information Page
+    await page.locator("[onclick='PaymentInfo.save()']").click()
+
+    //Confirm Order Page
+    const productname=await page.locator('.product-name').textContent()
+    await expect(productname).toBe('Health Book')
+    await page.locator("[onclick='ConfirmOrder.save()']").click()
+
+    //Thank You Page     
+    //const result=await page.locator("[class='page-title'] h1").textContent()
+    //await expect(result).toBe('Thank you')
+    console.log(await page.locator("//strong[text()='Your order has been successfully processed!']").textContent())
+    await page.waitForTimeout(3000)
